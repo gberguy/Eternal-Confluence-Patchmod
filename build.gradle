@@ -68,6 +68,7 @@ java {
 
 minecraft {
     mcVersion.set('1.12.2')
+    forgeVersion.set('14.23.5.2859')
 
     mcpMappingChannel.set(propertyString('mapping_channel'))
     mcpMappingVersion.set(propertyString('mapping_version'))
