@@ -1,0 +1,93 @@
+package com.gberguy.ecpatches.core;
+
+import com.gberguy.ecpatches.core.patches.*;
+import java.util.Collections;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import net.minecraft.launchwrapper.IClassTransformer;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.objectweb.asm.ClassReader;
+import org.objectweb.asm.ClassWriter;
+import org.objectweb.asm.tree.ClassNode;
+
+public final class PatchTransformer implements IClassTransformer {
+    private static final Logger LOG = LogManager.getLogger("EternalConfluencePatchmod");
+    private static final Map<PatchId, MethodPatch> PATCHES;
+    private static final Map<String, List<MethodPatch>> TARGETS;
+    private final PatchSettings settings;
+
+    static {
+        Map<PatchId, MethodPatch> patches = new LinkedHashMap<>();
+        Map<String, List<MethodPatch>> targets = new LinkedHashMap<>();
+        for (MethodPatch patch : new MethodPatch[]{new BloodArsenalPatch(), new RootsPatch(), new LycanitesMeleePatch(), new LycanitesGhostPatch(), new MorechidsPatch()}) {
+            if (patches.put(patch.id, patch) != null) {
+                throw new IllegalStateException("Duplicate patch id " + patch.id);
+            }
+            targets.computeIfAbsent(patch.className, key -> new ArrayList<>()).add(patch);
+        }
+        PATCHES = Collections.unmodifiableMap(patches);
+        TARGETS = Collections.unmodifiableMap(targets);
+    }
+
+    public PatchTransformer() {
+        this.settings = null;
+    }
+
+    public PatchTransformer(PatchSettings settings) {
+        this.settings = settings;
+    }
+
+    public static Map<PatchId, MethodPatch> patches() {
+        return PATCHES;
+    }
+
+    @Override
+    public byte[] transform(String name, String transformedName, byte[] basicClass) {
+        if (basicClass == null) {
+            return null;
+        }
+        List<MethodPatch> patches = TARGETS.get(transformedName);
+        if (patches == null) {
+            patches = TARGETS.get(name);
+        }
+        if (patches == null) {
+            return basicClass;
+        }
+        byte[] result = basicClass;
+        for (MethodPatch patch : patches) {
+            result = apply(patch, result);
+        }
+        return result;
+    }
+
+    private byte[] apply(MethodPatch patch, byte[] basicClass) {
+        try {
+            PatchSettings options = settings == null ? PatchSettings.current() : settings;
+            if (!options.enabled(patch.id)) {
+                LOG.info("{}: disabled", patch.id.key);
+                return basicClass;
+            }
+            ClassNode node = new ClassNode();
+            new ClassReader(basicClass).accept(node, 0);
+            MethodPatch.Result result = patch.apply(node);
+            if (result == MethodPatch.Result.APPLIED) {
+                ClassWriter writer = new ClassWriter(ClassWriter.COMPUTE_MAXS);
+                node.accept(writer);
+                byte[] output = writer.toByteArray();
+                LOG.info("{}: applied to {}", patch.id.key, patch.className);
+                return output;
+            }
+            if (result == MethodPatch.Result.ALREADY_PRESENT) {
+                LOG.info("{}: recognized existing fix; skipped", patch.id.key);
+            } else {
+                LOG.warn("{}: unrecognized target code; skipped without changing {}", patch.id.key, patch.className);
+            }
+        } catch (RuntimeException | LinkageError error) {
+            LOG.error("{}: transformation failed; retaining original class {}", patch.id.key, patch.className, error);
+        }
+        return basicClass;
+    }
+}

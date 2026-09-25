@@ -1,0 +1,30 @@
+package com.gberguy.ecpatches;
+
+import net.minecraftforge.fml.common.Mod;
+import net.minecraftforge.fml.common.Loader;
+import com.gberguy.ecpatches.core.PatchId;
+import com.gberguy.ecpatches.core.PatchSettings;
+import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
+@Mod(modid = Tags.MOD_ID, name = Tags.MOD_NAME, version = Tags.VERSION, acceptedMinecraftVersions = "[1.12.2]", acceptableRemoteVersions = "*")
+public class EternalConfluencePatchmod {
+
+    public static final Logger LOGGER = LogManager.getLogger(Tags.MOD_NAME);
+
+    /**
+     * <a href="https://cleanroommc.com/wiki/forge-mod-development/event#overview">
+     *     Take a look at how many FMLStateEvents you can listen to via the @Mod.EventHandler annotation here
+     * </a>
+     */
+    @Mod.EventHandler
+    public void preInit(FMLPreInitializationEvent event) {
+        PatchSettings settings = PatchSettings.current();
+        for (PatchId patch : PatchId.values()) {
+            LOGGER.info("{}: {}, target {}", patch.key, settings.enabled(patch) ? "enabled" : "disabled",
+                    Loader.isModLoaded(patch.modId) ? "present" : "absent");
+        }
+    }
+
+}
