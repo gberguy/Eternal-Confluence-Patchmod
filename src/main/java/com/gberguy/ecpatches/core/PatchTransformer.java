@@ -5,6 +5,7 @@ import java.util.Collections;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Arrays;
 import java.util.Map;
 import net.minecraft.launchwrapper.IClassTransformer;
 import org.apache.logging.log4j.LogManager;
@@ -15,18 +16,21 @@ import org.objectweb.asm.tree.ClassNode;
 
 public final class PatchTransformer implements IClassTransformer {
     private static final Logger LOG = LogManager.getLogger("EternalConfluencePatchmod");
-    private static final Map<PatchId, MethodPatch> PATCHES;
+    private static final Map<String, MethodPatch> PATCHES;
     private static final Map<String, List<MethodPatch>> TARGETS;
     private final PatchSettings settings;
 
     static {
-        Map<PatchId, MethodPatch> patches = new LinkedHashMap<>();
+        Map<String, MethodPatch> patches = new LinkedHashMap<>();
         Map<String, List<MethodPatch>> targets = new LinkedHashMap<>();
-        for (MethodPatch patch : new MethodPatch[]{new BloodArsenalPatch(), new RootsPatch(), new LycanitesMeleePatch(), new LycanitesGhostPatch(), new MorechidsPatch()}) {
-            if (patches.put(patch.id, patch) != null) {
-                throw new IllegalStateException("Duplicate patch id " + patch.id);
+        List<MethodPatch> modules = new ArrayList<>(Arrays.asList(new BloodArsenalPatch(), new RootsPatch(), new LycanitesMeleePatch(), new LycanitesGhostPatch(), new MorechidsPatch()));
+        modules.addAll(Arrays.asList(GhostlyPatches.create()));
+        for (MethodPatch patch : modules) {
+            String key = patch.className + "#" + patch.methodName + patch.descriptor;
+            if (patches.put(key, patch) != null) {
+                throw new IllegalStateException("Duplicate patch target " + key);
             }
-            targets.computeIfAbsent(patch.className, key -> new ArrayList<>()).add(patch);
+            targets.computeIfAbsent(patch.className, owner -> new ArrayList<>()).add(patch);
         }
         PATCHES = Collections.unmodifiableMap(patches);
         TARGETS = Collections.unmodifiableMap(targets);
@@ -40,7 +44,7 @@ public final class PatchTransformer implements IClassTransformer {
         this.settings = settings;
     }
 
-    public static Map<PatchId, MethodPatch> patches() {
+    public static Map<String, MethodPatch> patches() {
         return PATCHES;
     }
 
@@ -66,7 +70,7 @@ public final class PatchTransformer implements IClassTransformer {
     private byte[] apply(MethodPatch patch, byte[] basicClass) {
         try {
             PatchSettings options = settings == null ? PatchSettings.current() : settings;
-            if (!options.enabled(patch.id)) {
+            if (!patch.enabled(options)) {
                 LOG.info("{}: disabled", patch.id.key);
                 return basicClass;
             }

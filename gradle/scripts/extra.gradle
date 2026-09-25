@@ -3,3 +3,5 @@
 
 // If you wish to use the default helper methods, uncomment the line below
 // apply from: 'gradle/scripts/helpers.gradle'
+
+sourceSets.test.java.srcDir("src/testFixtures/java")

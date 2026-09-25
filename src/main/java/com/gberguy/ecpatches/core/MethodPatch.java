@@ -11,16 +11,21 @@ public abstract class MethodPatch implements Opcodes {
     public final String className;
     public final String methodName;
     public final String descriptor;
-    private final String originalFingerprint;
+    private final String[] originalFingerprints;
     private final String[] fixedFingerprints;
 
     protected MethodPatch(PatchId id, String className, String methodName, String descriptor,
             String originalFingerprint, String... fixedFingerprints) {
+        this(id, className, methodName, descriptor, new String[]{originalFingerprint}, fixedFingerprints);
+    }
+
+    protected MethodPatch(PatchId id, String className, String methodName, String descriptor,
+            String[] originalFingerprints, String... fixedFingerprints) {
         this.id = id;
         this.className = className;
         this.methodName = methodName;
         this.descriptor = descriptor;
-        this.originalFingerprint = originalFingerprint;
+        this.originalFingerprints = originalFingerprints;
         this.fixedFingerprints = fixedFingerprints;
     }
 
@@ -45,7 +50,7 @@ public abstract class MethodPatch implements Opcodes {
         if (Arrays.asList(fixedFingerprints).contains(fingerprint)) {
             return Result.ALREADY_PRESENT;
         }
-        if (!originalFingerprint.equals(fingerprint)) {
+        if (!Arrays.asList(originalFingerprints).contains(fingerprint)) {
             return Result.UNSUPPORTED;
         }
         edit(method, MinecraftNames.isDeobfuscated(method));
@@ -56,6 +61,10 @@ public abstract class MethodPatch implements Opcodes {
     }
 
     protected abstract void edit(MethodNode method, boolean deobfuscated);
+
+    public boolean enabled(PatchSettings settings) {
+        return settings.enabled(id);
+    }
 
     protected static AbstractInsnNode next(AbstractInsnNode instruction) {
         AbstractInsnNode result = instruction.getNext();

@@ -33,7 +33,7 @@ public class PatchSettingsTest {
         PatchSettings settings = PatchSettings.read(file.toFile());
         assertFalse(settings.enabled(PatchId.ROOTS));
         assertTrue(settings.enabled(PatchId.MORECHIDS));
-        assertTrue(new String(Files.readAllBytes(file), StandardCharsets.UTF_8).startsWith(initial));
+        assertTrue(new String(Files.readAllBytes(file), StandardCharsets.UTF_8).contains("# custom"));
         assertFalse(PatchSettings.read(file.toFile()).enabled(PatchId.ROOTS));
     }
 
@@ -44,6 +44,33 @@ public class PatchSettingsTest {
         PatchSettings settings = PatchSettings.read(file.toFile());
         assertFalse(settings.enabled(PatchId.ROOTS));
         assertTrue(settings.enabled(PatchId.MORECHIDS));
+    }
+
+    @Test
+    void migratesOldConfigIntoSectionsWithoutLosingUserChoices() throws Exception {
+        Path file = directory.resolve("old.cfg");
+        String old = "# Eternal Confluence Patchmod\n"
+                + "# Set each fix to true or false. Changes require a full game/server restart.\n"
+                + "# Target: Lycanites Mobs / Corail Tombstone\n"
+                + "# Prevents targeting players with tombstone:ghostly_shape. Does nothing special when that potion is absent. Tested with Lycanites Mobs 1.12.2-2.0.8.10.\n"
+                + "lycanitesGhostlyShape=false\nrootsAirStateMatcher=false\n# My custom note\nfutureOption=keep\n";
+        Files.write(file, old.getBytes(StandardCharsets.UTF_8));
+        PatchSettings options = PatchSettings.read(file.toFile());
+        assertFalse(options.enabled(PatchId.LYCANITES_GHOST));
+        assertFalse(options.enabled(PatchId.ROOTS));
+        assertTrue(options.enabled(PatchId.WIZARDRY_GHOST));
+        String rendered = new String(Files.readAllBytes(file), StandardCharsets.UTF_8);
+        int section = rendered.indexOf("# Corail Tombstone - Ghostly Shape Compatibility");
+        assertTrue(section > rendered.indexOf("# General Fixes"));
+        for (PatchId id : PatchId.values()) {
+            assertEquals(id.ghostly(), rendered.indexOf(id.key + "=") > section);
+            assertEquals(1, rendered.split(id.key + "=", -1).length - 1);
+        }
+        assertTrue(rendered.contains("# My custom note\nfutureOption=keep"));
+        assertFalse(rendered.contains("Tested with"));
+        assertFalse(rendered.contains("Set each fix"));
+        PatchSettings.read(file.toFile());
+        assertEquals(rendered, new String(Files.readAllBytes(file), StandardCharsets.UTF_8));
     }
 
     @Test

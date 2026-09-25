@@ -18,6 +18,9 @@ DEPENDENCIES = {
     "launchwrapper": ("https://libraries.minecraft.net/net/minecraft/launchwrapper/1.12/launchwrapper-1.12.jar", "57f402b626d16cc2705bf2a37add7adbb074f0ca3b3102fa6e23aa303dae682f"),
     "log4j-api": ("https://repo.maven.apache.org/maven2/org/apache/logging/log4j/log4j-api/2.8.1/log4j-api-2.8.1.jar", "1205ab764b1326f7d96d99baa4a4e12614599bf3d735790947748ee116511fa2"),
     "junit": ("https://repo.maven.apache.org/maven2/org/junit/platform/junit-platform-console-standalone/1.7.1/junit-platform-console-standalone-1.7.1.jar", "e588d4dab5c8898b241c2a25938bf0b933ab77518626f14028cce403df7ce33d"),
+    "minecraft": ("https://piston-data.mojang.com/v1/objects/0f275bc1547d01fa5f56ba34bdc87d981ee12daf/client.jar", "8ada07da5ee77dad3527bd7278fbd05ee1fc8a597813b216a871a2d7d64cc64f"),
+    "srg": ("https://maven.minecraftforge.net/de/oceanlabs/mcp/mcp/1.12.2/mcp-1.12.2-srg.zip", "bea27218818448851594889bf7d984df614ffc698bbe41599dd6237d627e3782"),
+    "stable": ("https://maven.minecraftforge.net/de/oceanlabs/mcp/mcp_stable/39-1.12/mcp_stable-39-1.12.zip", "13a31f28c11f8f395ffe7e8563ade459f5a0ee46493abbbde3ce6e9493ac4152"),
 }
 MODERN_ASM = {
     "asm": "8cadd43ac5eb6d09de05faecca38b917a040bb9139c7edeb4cc81c740b713281",
@@ -33,7 +36,7 @@ def download(name):
     path = BUILD / "dependencies" / (name + ".jar")
     path.parent.mkdir(parents=True, exist_ok=True)
     if not path.exists() or hashlib.sha256(path.read_bytes()).hexdigest() != checksum:
-        request = urllib.request.Request(url, headers={"User-Agent": "EternalConfluencePatchmod-build/0.1.0"})
+        request = urllib.request.Request(url, headers={"User-Agent": "EternalConfluencePatchmod-build/0.2.0"})
         with urllib.request.urlopen(request, timeout=60) as response:
             data = response.read()
         if hashlib.sha256(data).hexdigest() != checksum:
@@ -53,6 +56,7 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--original-mods", type=Path)
     parser.add_argument("--patched-mods", type=Path)
+    parser.add_argument("--ghostly-mods", type=Path)
     args = parser.parse_args()
     if bool(args.original_mods) != bool(args.patched_mods):
         parser.error("Provide both --original-mods and --patched-mods for fixture tests")
@@ -61,6 +65,39 @@ def main():
         parser.error("A JDK 17 or newer is required")
     properties = dict(re.findall(r"^[ \t]*([\w.]+)[ \t]*=[ \t]*(.*?)[ \t]*$", (ROOT / "gradle.properties").read_text(), re.M))
     dependencies = {name: download(name) for name in DEPENDENCIES}
+    mapping_tools = BUILD / "mapping-tools"
+    compile_java(java, [ROOT / "tools/BuildMappings.java"], mapping_tools, [dependencies["asm"]])
+
+    def remap(mode, source, target, hierarchy):
+        temporary = target.with_suffix(".tmp.jar")
+        try:
+            subprocess.run([java, "-Xmx512m", "-cp", os.pathsep.join(map(str, [mapping_tools, dependencies["asm"]])),
+                            "BuildMappings", mode, str(dependencies["srg"]), str(dependencies["stable"]),
+                            str(source), str(temporary)] + list(map(str, hierarchy)), check=True, cwd=ROOT)
+            with zipfile.ZipFile(temporary) as mapped:
+                if mapped.testzip() is not None:
+                    raise RuntimeError("Invalid mapped archive: " + str(target))
+            os.replace(temporary, target)
+        finally:
+            temporary.unlink(missing_ok=True)
+
+    def archive(directory, target):
+        with zipfile.ZipFile(target, "w") as output:
+            for path in sorted(directory.rglob("*.class")):
+                output.write(path, path.relative_to(directory).as_posix())
+
+    minecraft_mcp = BUILD / "minecraft-mcp.jar"
+    forge_mcp = BUILD / "forge-mcp.jar"
+    minecraft_srg = BUILD / "minecraft-srg.jar"
+    remap("mcp", dependencies["minecraft"], minecraft_mcp, [])
+    remap("mcp", dependencies["forge"], forge_mcp, [dependencies["minecraft"]])
+    remap("srg", minecraft_mcp, minecraft_srg, [])
+    compile_dependencies = [minecraft_mcp, forge_mcp] + [p for n, p in dependencies.items() if n not in ("minecraft", "forge", "srg", "stable")]
+    if args.ghostly_mods:
+        ghostly_mcp = BUILD / "ghostly-mcp"
+        ghostly_mcp.mkdir(exist_ok=True)
+        for source in sorted(args.ghostly_mods.glob("*.jar")):
+            remap("mcp", source, ghostly_mcp / source.name, [dependencies["minecraft"]])
     classes = BUILD / "classes"
     tests = BUILD / "test-classes"
     for directory in (classes, tests):
@@ -71,7 +108,7 @@ def main():
     generated.write_text("package com.gberguy.ecpatches;\npublic final class Tags {\n" + "".join(
         "    public static final String " + key + " = " + json.dumps(properties[value]) + ";\n"
         for key, value in (("MOD_ID", "mod_id"), ("MOD_NAME", "mod_name"), ("VERSION", "mod_version"))) + "}\n")
-    compile_java(java, sorted((ROOT / "src/main/java").rglob("*.java")) + [generated], classes, dependencies.values())
+    compile_java(java, sorted((ROOT / "src/main/java").rglob("*.java")) + [generated], classes, compile_dependencies)
     for resource in sorted((ROOT / "src/main/resources").rglob("*")):
         if resource.is_file():
             relative = resource.relative_to(ROOT / "src/main/resources")
@@ -82,13 +119,23 @@ def main():
                 data = re.sub(r"\$\{(\w+)\}", lambda m: properties[m[1]], data.decode()).encode()
                 json.loads(data)
             target.write_bytes(data)
-    compile_java(java, sorted((ROOT / "src/test/java").rglob("*.java")), tests,
-                 [classes] + list(dependencies.values()))
-    test_dependencies = [classes, tests] + [path for name, path in dependencies.items() if name != "forge"]
+    test_sources = sorted((ROOT / "src/test/java").rglob("*.java")) + sorted((ROOT / "src/testFixtures/java").rglob("*.java"))
+    compile_java(java, test_sources, tests, [classes] + compile_dependencies)
+    main_mcp = BUILD / "main-mcp.jar"
+    main_srg = BUILD / "main-srg.jar"
+    archive(classes, main_mcp)
+    remap("srg", main_mcp, main_srg, [minecraft_mcp, forge_mcp])
+    test_mcp = BUILD / "test-mcp.jar"
+    test_srg = BUILD / "test-srg.jar"
+    archive(tests, test_mcp)
+    remap("srg", test_mcp, test_srg, [minecraft_mcp, forge_mcp])
+    test_dependencies = [classes, tests] + [path for name, path in dependencies.items() if name not in ("forge", "minecraft", "srg", "stable")]
     command = [java, "--add-opens", "java.base/java.lang=ALL-UNNAMED",
                "-Dorg.apache.logging.log4j.simplelog.StatusLogger.level=OFF",
                "-Dorg.apache.logging.log4j.simplelog.level=OFF"]
-    for name, path in (("originalMods", args.original_mods), ("patchedMods", args.patched_mods)):
+    for name, path in (("originalMods", args.original_mods), ("patchedMods", args.patched_mods),
+                       ("ghostlyMods", args.ghostly_mods), ("minecraftMcp", minecraft_mcp), ("minecraftSrg", minecraft_srg),
+                       ("releaseJar", main_srg), ("releaseTestJar", test_srg), ("ghostlyMcp", ghostly_mcp if args.ghostly_mods else None)):
         if path:
             command.append("-Decpatches." + name + "=" + str(path.resolve()))
     modern = []
@@ -109,6 +156,8 @@ def main():
                 "Implementation-Version: " + properties["mod_version"] + "\r\n\r\n")
     entries = {"META-INF/MANIFEST.MF": manifest.encode(), "META-INF/LICENSE": (ROOT / "LICENSE").read_bytes()}
     entries.update({p.relative_to(classes).as_posix(): p.read_bytes() for p in sorted(classes.rglob("*")) if p.is_file()})
+    with zipfile.ZipFile(main_srg) as release:
+        entries.update({name: release.read(name) for name in release.namelist()})
     for name, data in entries.items():
         if name.endswith(".class") and int.from_bytes(data[6:8], "big") != 52:
             raise RuntimeError("Non-Java-8 class: " + name)

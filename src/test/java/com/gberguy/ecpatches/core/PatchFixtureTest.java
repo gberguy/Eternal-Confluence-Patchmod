@@ -7,6 +7,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.LinkedHashMap;
+import com.gberguy.ecpatches.core.patches.GhostlyTargetPatch;
 import java.util.Map;
 import java.util.Properties;
 import java.util.jar.JarFile;
@@ -80,7 +81,7 @@ public class PatchFixtureTest {
 
     @TestFactory
     Stream<DynamicTest> reproducesAllFiveFixesAndPreservesOtherMethods() {
-        return PatchTransformer.patches().values().stream().map(patch -> DynamicTest.dynamicTest(patch.id.name(), () -> {
+        return PatchTransformer.patches().values().stream().filter(p -> !(p instanceof GhostlyTargetPatch)).map(patch -> DynamicTest.dynamicTest(patch.id.name(), () -> {
             byte[] original = fixture(patch, "ecpatches.originalMods");
             byte[] replacement = fixture(patch, "ecpatches.patchedMods");
             byte[] output = transformer.transform(patch.className, patch.className, original);
@@ -95,7 +96,7 @@ public class PatchFixtureTest {
 
     @TestFactory
     Stream<DynamicTest> skipsChangedOrRemovedMethods() {
-        return PatchTransformer.patches().values().stream().map(patch -> DynamicTest.dynamicTest(patch.id.name(), () -> {
+        return PatchTransformer.patches().values().stream().filter(p -> !(p instanceof GhostlyTargetPatch)).map(patch -> DynamicTest.dynamicTest(patch.id.name(), () -> {
             ClassNode changed = node(fixture(patch, "ecpatches.originalMods"));
             target(changed, patch).instructions.insert(new InsnNode(Opcodes.NOP));
             byte[] input = bytes(changed);
@@ -108,11 +109,12 @@ public class PatchFixtureTest {
 
     @TestFactory
     Stream<DynamicTest> switchesAreIndependent() {
-        return PatchTransformer.patches().values().stream().map(disabled -> DynamicTest.dynamicTest(disabled.id.name(), () -> {
+        return PatchTransformer.patches().values().stream().filter(p -> !(p instanceof GhostlyTargetPatch)).map(disabled -> DynamicTest.dynamicTest(disabled.id.name(), () -> {
             Path file = directory.resolve(disabled.id.name() + ".cfg");
             Files.write(file, (disabled.id.key + "=false\n").getBytes(StandardCharsets.UTF_8));
             PatchTransformer configured = new PatchTransformer(PatchSettings.read(file.toFile()));
             for (MethodPatch patch : PatchTransformer.patches().values()) {
+                if (patch instanceof GhostlyTargetPatch) continue;
                 byte[] input = fixture(patch, "ecpatches.originalMods");
                 byte[] output = configured.transform(patch.className, patch.className, input);
                 if (patch == disabled) assertSame(input, output);
@@ -123,7 +125,7 @@ public class PatchFixtureTest {
 
     @TestFactory
     Stream<DynamicTest> supportsDevelopmentNames() {
-        return PatchTransformer.patches().values().stream().map(patch -> DynamicTest.dynamicTest(patch.id.name(), () -> {
+        return PatchTransformer.patches().values().stream().filter(p -> !(p instanceof GhostlyTargetPatch)).map(patch -> DynamicTest.dynamicTest(patch.id.name(), () -> {
             Properties mappings = new Properties();
             try (InputStream input = getClass().getResourceAsStream("/ecpatches/minecraft-names.properties")) {
                 mappings.load(input);

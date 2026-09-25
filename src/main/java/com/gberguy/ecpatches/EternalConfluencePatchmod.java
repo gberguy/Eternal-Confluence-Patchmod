@@ -4,6 +4,8 @@ import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.Loader;
 import com.gberguy.ecpatches.core.PatchId;
 import com.gberguy.ecpatches.core.PatchSettings;
+import com.gberguy.ecpatches.runtime.GhostlyEvents;
+import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -21,6 +23,7 @@ public class EternalConfluencePatchmod {
     @Mod.EventHandler
     public void preInit(FMLPreInitializationEvent event) {
         PatchSettings settings = PatchSettings.current();
+        MinecraftForge.EVENT_BUS.register(new GhostlyEvents(settings));
         for (PatchId patch : PatchId.values()) {
             LOGGER.info("{}: {}, target {}", patch.key, settings.enabled(patch) ? "enabled" : "disabled",
                     Loader.isModLoaded(patch.modId) ? "present" : "absent");
