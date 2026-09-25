@@ -1,21 +1,44 @@
-## TemplateDevEnv
-_For Kotlin see [TemplateDevEnvKt](https://github.com/CleanroomMC/TemplateDevEnvKt)_
+# Eternal Confluence Patchmod
 
-Template workspace for modding Minecraft 1.12.2. Licensed under MIT, it is made for public use.
+Configurable fixes for Minecraft 1.12.2, plus compatibility that makes mobs from selected mods respect Corail Tombstone's Ghostly Shape effect.
 
-This template runs on **Java 25**, **Gradle 9.6.1** + **[RetroFuturaGradle](https://github.com/GTNewHorizons/RetroFuturaGradle) 2.0.2** + **Forge 14.23.5.2847**.
+## General fixes
 
-With **coremod and mixin support** that is easy to configure.
+- **Blood Arsenal** (`bloodArsenalSlateItem`): Fixes compressed slate variants having incorrect names, variant handling, and crafting recipe behavior.
+- **Roots** (`rootsAirStateMatcher`): Fixes Wildwood disappearing instead of converting correctly to Runed Wildwood.
+- **Lycanites Mobs** (`lycanitesMeleeLineOfSight`): Prevents Lycanites mobs from performing melee attacks through walls and other solid obstacles.
+- **MoreChids** (`morechidsClassGeneration`): Fixes a startup crash when MoreChids generates custom Orechid classes.
 
-### Instructions:
+## Corail Tombstone: Ghostly Shape compatibility
 
-1. Click `use this template` at the top.
-2. Clone the repository that you have created with this template to your local machine.
-3. Make sure IDEA is using Java 25 for Gradle before you sync the project. Verify this by going to IDEA's `Settings > Build, Execution, Deployment > Build Tools > Gradle > Gradle JVM`.
-4. Open the project folder in IDEA. When prompted, click "Load Gradle Project" as it detects the `build.gradle`, if you weren't prompted, right-click the project's `build.gradle` in IDEA, select `Link Gradle Project`, after completion, hit `Refresh All` in the gradle tab on the right.
-5. Run gradle tasks such as `runClient` and `runServer` in the IDEA gradle tab, or use the auto-imported run configurations like `1. Run Client`.
+Makes mobs from enabled mods ignore players affected by Ghostly Shape, including players they already targeted. Each integration has its own setting:
 
-### Notes:
-- Dependencies script in [gradle/scripts/dependencies.gradle](gradle/scripts/dependencies.gradle), explanations are commented in the file.
-- Publishing script in [gradle/scripts/publishing.gradle](gradle/scripts/publishing.gradle).
-- When writing Mixins on IntelliJ, it is advisable to use latest [MinecraftDev Fork for RetroFuturaGradle](https://github.com/eigenraven/MinecraftDev/releases).
+- **Lycanites Mobs** (`lycanitesGhostlyShape`)
+- **Electroblob's Wizardry** (`ebWizardryGhostlyShape`)
+- **Ancient Spellcraft** (`ancientSpellcraftGhostlyShape`)
+- **ToroQuest** (`toroQuestGhostlyShape`)
+
+Corail Tombstone and the mod being patched must be installed for the corresponding compatibility fix to apply.
+
+## Configuration
+
+On first launch, the mod creates `config/eternalconfluencepatchmod.cfg`. Each setting can be set to `true` or `false` independently. Changes take effect after restarting Minecraft.
+
+## Requirements
+
+- Minecraft 1.12.2
+- Forge for Minecraft 1.12.2
+
+The target mods are optional; the patchmod does not require every listed mod to be installed.
+
+## Installation
+
+Place the JAR in the instance's `mods` folder.
+
+## License
+
+MIT; see [LICENSE](LICENSE).
+
+## AI use disclosure
+
+AI tools assisted with analyzing target-mod behavior and writing portions of this mod's source code and documentation. The project owner directed the work and tested the release in-game.
