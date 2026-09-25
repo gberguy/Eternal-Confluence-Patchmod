@@ -1,6 +1,6 @@
 # Eternal Confluence Patchmod
 
-Configurable fixes for Minecraft 1.12.2, plus compatibility that makes mobs from selected mods respect Corail Tombstone's Ghostly Shape effect.
+Designed for the Eternal Confluence modpack, this patchmod provides configurable fixes for Minecraft 1.12.2 and makes mobs from selected mods respect Corail Tombstone's Ghostly Shape effect. It can also be used in any other Minecraft 1.12.2 Forge installation with the relevant target mods.
 
 ## General fixes
 
@@ -18,7 +18,7 @@ Makes mobs from enabled mods ignore players affected by Ghostly Shape, including
 - **Ancient Spellcraft** (`ancientSpellcraftGhostlyShape`)
 - **ToroQuest** (`toroQuestGhostlyShape`)
 
-Corail Tombstone and the mod being patched must be installed for the corresponding compatibility fix to apply.
+Corail Tombstone and the mod being patched must be installed for the corresponding compatibility fix to have an effect. If the Ghostly Shape potion is unavailable, the guarded checks do nothing.
 
 ## Configuration
 
