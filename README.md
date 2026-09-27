@@ -8,6 +8,7 @@ Designed for the Eternal Confluence modpack, this mod provides configurable fixe
 - **Roots** (`rootsAirStateMatcher`): Fixes Wildwood disappearing instead of converting correctly to Runed Wildwood.
 - **Lycanites Mobs** (`lycanitesMeleeLineOfSight`): Prevents Lycanites mobs from performing melee attacks through walls and other solid obstacles.
 - **MoreChids** (`morechidsClassGeneration`): Fixes a startup crash when MoreChids generates custom Orechid classes.
+- **Waystones** (`waystonesVillageWeight`, `villageWaystoneWeight`): Makes village Waystones more likely to generate by increasing their piece weight to `100` by default. The weight is configurable; Waystones' original village chance and maximum of one Waystone per village remain in effect.
 
 ## Corail Tombstone: Ghostly Shape compatibility
 
@@ -22,7 +23,7 @@ Corail Tombstone and the mod being patched must be installed for the correspondi
 
 ## Configuration
 
-On first launch, the mod creates `config/eternalconfluencetweaks.cfg`. Each fix can be set to `true` or `false` independently. Changes take effect after restarting Minecraft.
+On first launch, the mod creates `config/eternalconfluencetweaks.cfg`. Each fix can be set to `true` or `false` independently. `villageWaystoneWeight` can be set from `1` to `1000000`. Changes take effect after restarting Minecraft.
 
 ## Requirements
 

@@ -1,6 +1,9 @@
 # Changelog
 
-## [1.0.0] - 2023-09-15
+## [0.3.0] - 2026-09-27
 
 ### Added
-- This is a default template changelog that follows the [KeepAChangelog Convention](https://keepachangelog.com/en/1.1.0/)
+- Added an optional Waystones village-generation weight setting, defaulting to 100.
+
+### Changed
+- Renamed the project to Eternal Confluence Tweaks and updated the mod ID and generated config filename.
