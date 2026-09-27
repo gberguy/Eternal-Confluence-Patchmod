@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.3.1] - 2026-09-27
+
+### Changed
+- Added explanations for the Waystones enable switch and village weight to the generated config.
+
 ## [0.3.0] - 2026-09-27
 
 ### Added

@@ -5,7 +5,7 @@ public enum PatchId {
     ROOTS("rootsAirStateMatcher", "roots", "Roots", "Fixes Wildwood disappearing instead of converting correctly to Runed Wildwood."),
     LYCANITES_MELEE("lycanitesMeleeLineOfSight", "lycanitesmobs", "Lycanites Mobs", "Prevents Lycanites mobs from performing melee attacks through walls and other solid obstacles."),
     MORECHIDS("morechidsClassGeneration", "morechids", "MoreChids", "Fixes a startup crash when MoreChids generates custom Orechid classes."),
-    WAYSTONES_VILLAGE("waystonesVillageWeight", "waystones", "Waystones", ""),
+    WAYSTONES_VILLAGE("waystonesVillageWeight", "waystones", "Waystones", "Set waystonesVillageWeight to false to disable this tweak."),
     LYCANITES_GHOST("lycanitesGhostlyShape", "lycanitesmobs", "Lycanites Mobs", ""),
     WIZARDRY_GHOST("ebWizardryGhostlyShape", "ebwizardry", "Electroblob's Wizardry", ""),
     ANCIENT_GHOST("ancientSpellcraftGhostlyShape", "ancientspellcraft", "Ancient Spellcraft", ""),

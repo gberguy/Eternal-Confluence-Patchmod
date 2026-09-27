@@ -98,8 +98,9 @@ public final class PatchSettings {
     private static String render(Properties properties, String original) throws IOException {
         String ghostHeader = "# Corail Tombstone - Ghostly Shape Compatibility";
         String ghostDescription = "# Makes mobs from enabled mods ignore players affected by Ghostly Shape, including players they already targeted.";
+        String weightDescription = "# villageWaystoneWeight accepts positive integer weights from 1 to 1000000. Higher weights make village Waystones more common. Waystones default is 3.";
         Set<String> generated = new HashSet<>(Arrays.asList(
-                "# Eternal Confluence Tweaks", "# General Fixes", ghostHeader, ghostDescription,
+                "# Eternal Confluence Tweaks", "# General Fixes", ghostHeader, ghostDescription, weightDescription,
                 "# Set each fix to true or false. Changes require a full game/server restart.",
                 "# Target: Lycanites Mobs / Corail Tombstone",
                 "# Uses BlockSlate's existing subtype-aware item instead of a generic ItemBlock. Tested with 1.12.2-2.2.2-31.",
@@ -133,14 +134,14 @@ public final class PatchSettings {
             if (ghostly) output.append('\n').append(ghostHeader).append('\n').append(ghostDescription).append('\n');
             for (PatchId id : PatchId.values()) {
                 if (id.ghostly() != ghostly) continue;
-                if (id == PatchId.WAYSTONES_VILLAGE) output.append('\n');
-                else output.append("\n# Target: ").append(id.modName).append('\n');
+                output.append("\n# Target: ").append(id.modName).append('\n');
                 if (!id.description.isEmpty()) output.append("# ").append(id.description).append('\n');
                 String value = properties.getProperty(id.key, "true").trim().replace("\\", "\\\\").replace("\n", "\\n").replace("\r", "\\r");
                 output.append(id.key).append('=').append(value).append('\n');
                 if (id == PatchId.WAYSTONES_VILLAGE) {
                     String weight = properties.getProperty("villageWaystoneWeight", "100").trim()
                             .replace("\\", "\\\\").replace("\n", "\\n").replace("\r", "\\r");
+                    output.append('\n').append(weightDescription).append('\n');
                     output.append("villageWaystoneWeight=").append(weight).append('\n');
                 }
             }

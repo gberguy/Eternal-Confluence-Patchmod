@@ -20,7 +20,7 @@ public class PatchSettingsTest {
         for (PatchId id : PatchId.values()) {
             assertTrue(settings.enabled(id));
             assertTrue(contents.contains(id.key + "=true"));
-            if (id != PatchId.WAYSTONES_VILLAGE) assertTrue(contents.contains(id.modName));
+            assertTrue(contents.contains(id.modName));
             assertTrue(contents.contains(id.description));
         }
         assertTrue(contents.startsWith("# Eternal Confluence Tweaks\n"));
