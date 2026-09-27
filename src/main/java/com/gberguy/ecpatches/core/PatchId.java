@@ -9,7 +9,8 @@ public enum PatchId {
     LYCANITES_GHOST("lycanitesGhostlyShape", "lycanitesmobs", "Lycanites Mobs", ""),
     WIZARDRY_GHOST("ebWizardryGhostlyShape", "ebwizardry", "Electroblob's Wizardry", ""),
     ANCIENT_GHOST("ancientSpellcraftGhostlyShape", "ancientspellcraft", "Ancient Spellcraft", ""),
-    TORO_GHOST("toroQuestGhostlyShape", "toroquest", "ToroQuest", "");
+    TORO_GHOST("toroQuestGhostlyShape", "toroquest", "ToroQuest", ""),
+    WITCHERY_VILLAGES_TORO_GUARDS("witcheryVillagesToroGuards", "witcherywalls", "Witchery Villages + ToroQuest", "Replaces Witchery Villages guards with ToroQuest guards affiliated with the local ToroQuest Province.");
 
     public final String key;
     public final String modId;

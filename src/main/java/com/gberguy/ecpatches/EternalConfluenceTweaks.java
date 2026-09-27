@@ -5,6 +5,7 @@ import net.minecraftforge.fml.common.Loader;
 import com.gberguy.ecpatches.core.PatchId;
 import com.gberguy.ecpatches.core.PatchSettings;
 import com.gberguy.ecpatches.runtime.GhostlyEvents;
+import com.gberguy.ecpatches.runtime.WitcheryVillagesToroGuardEvents;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
 import org.apache.logging.log4j.LogManager;
@@ -24,9 +25,16 @@ public class EternalConfluenceTweaks {
     public void preInit(FMLPreInitializationEvent event) {
         PatchSettings settings = PatchSettings.current();
         MinecraftForge.EVENT_BUS.register(new GhostlyEvents(settings));
+        if (settings.enabled(PatchId.WITCHERY_VILLAGES_TORO_GUARDS)
+                && Loader.isModLoaded("witcherywalls") && Loader.isModLoaded("toroquest")) {
+            MinecraftForge.EVENT_BUS.register(new WitcheryVillagesToroGuardEvents());
+        }
         for (PatchId patch : PatchId.values()) {
+            boolean targetPresent = patch == PatchId.WITCHERY_VILLAGES_TORO_GUARDS
+                    ? Loader.isModLoaded("witcherywalls") && Loader.isModLoaded("toroquest")
+                    : Loader.isModLoaded(patch.modId);
             LOGGER.info("{}: {}, target {}", patch.key, settings.enabled(patch) ? "enabled" : "disabled",
-                    Loader.isModLoaded(patch.modId) ? "present" : "absent");
+                    targetPresent ? "present" : "absent");
         }
     }
 

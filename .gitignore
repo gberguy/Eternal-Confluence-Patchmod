@@ -25,3 +25,5 @@ eclipse
 run
 logs
 __pycache__
+
+/dev-libs/
