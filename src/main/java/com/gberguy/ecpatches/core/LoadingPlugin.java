@@ -4,7 +4,7 @@ import java.io.File;
 import java.util.Map;
 import net.minecraftforge.fml.relauncher.IFMLLoadingPlugin;
 
-@IFMLLoadingPlugin.Name("EternalConfluencePatchmod")
+@IFMLLoadingPlugin.Name("EternalConfluenceTweaks")
 @IFMLLoadingPlugin.MCVersion("1.12.2")
 @IFMLLoadingPlugin.SortingIndex(1001)
 @IFMLLoadingPlugin.TransformerExclusions({"com.gberguy.ecpatches.core."})

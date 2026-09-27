@@ -5,6 +5,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import static org.junit.jupiter.api.Assertions.*;
 
 public class PatchSettingsTest {
@@ -18,9 +20,12 @@ public class PatchSettingsTest {
         for (PatchId id : PatchId.values()) {
             assertTrue(settings.enabled(id));
             assertTrue(contents.contains(id.key + "=true"));
-            assertTrue(contents.contains(id.modName));
+            if (id != PatchId.WAYSTONES_VILLAGE) assertTrue(contents.contains(id.modName));
             assertTrue(contents.contains(id.description));
         }
+        assertTrue(contents.startsWith("# Eternal Confluence Tweaks\n"));
+        assertEquals(100, settings.villageWaystoneWeight());
+        assertTrue(contents.contains("villageWaystoneWeight=100\n"));
         PatchSettings.read(file.toFile());
         assertEquals(contents, new String(Files.readAllBytes(file), StandardCharsets.UTF_8));
     }
@@ -49,7 +54,7 @@ public class PatchSettingsTest {
     @Test
     void migratesOldConfigIntoSectionsWithoutLosingUserChoices() throws Exception {
         Path file = directory.resolve("old.cfg");
-        String old = "# Eternal Confluence Patchmod\n"
+        String old = "# Eternal Confluence Tweaks\n"
                 + "# Set each fix to true or false. Changes require a full game/server restart.\n"
                 + "# Target: Lycanites Mobs / Corail Tombstone\n"
                 + "# Prevents targeting players with tombstone:ghostly_shape. Does nothing special when that potion is absent. Tested with Lycanites Mobs 1.12.2-2.0.8.10.\n"
@@ -90,5 +95,33 @@ public class PatchSettingsTest {
             assertNull(transformer.transform(patch.className, patch.className, null));
             assertSame(bytes, transformer.transform(patch.className, patch.className, bytes));
         }
+    }
+
+    @ParameterizedTest
+    @ValueSource(ints = {1, 3, 100, 250, 1000000})
+    void preservesConfiguredVillageWeight(int weight) throws Exception {
+        Path file = directory.resolve("weight.cfg");
+        Files.write(file, ("villageWaystoneWeight=" + weight + "\nrootsAirStateMatcher=false\n").getBytes(StandardCharsets.UTF_8));
+        PatchSettings settings = PatchSettings.read(file.toFile());
+        assertEquals(weight, settings.villageWaystoneWeight());
+        assertTrue(settings.enabled(PatchId.WAYSTONES_VILLAGE));
+        assertFalse(settings.enabled(PatchId.ROOTS));
+        String rendered = new String(Files.readAllBytes(file), StandardCharsets.UTF_8);
+        assertEquals(1, rendered.split("villageWaystoneWeight=", -1).length - 1);
+        assertEquals(weight, PatchSettings.read(file.toFile()).villageWaystoneWeight());
+        assertEquals(rendered, new String(Files.readAllBytes(file), StandardCharsets.UTF_8));
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"", "0", "-1", "1.5", "no", "1000001", "2147483647", "999999999999999999"})
+    void invalidVillageWeightDisablesOnlyWaystones(String weight) throws Exception {
+        Path file = directory.resolve("invalid.cfg");
+        Files.write(file, ("villageWaystoneWeight=" + weight + "\n").getBytes(StandardCharsets.UTF_8));
+        PatchSettings settings = PatchSettings.read(file.toFile());
+        for (PatchId id : PatchId.values()) {
+            assertEquals(id != PatchId.WAYSTONES_VILLAGE, settings.enabled(id));
+        }
+        assertEquals(100, settings.villageWaystoneWeight());
+        assertFalse(PatchSettings.read(file.toFile()).enabled(PatchId.WAYSTONES_VILLAGE));
     }
 }

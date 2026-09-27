@@ -15,7 +15,7 @@ import org.objectweb.asm.ClassWriter;
 import org.objectweb.asm.tree.ClassNode;
 
 public final class PatchTransformer implements IClassTransformer {
-    private static final Logger LOG = LogManager.getLogger("EternalConfluencePatchmod");
+    private static final Logger LOG = LogManager.getLogger("EternalConfluenceTweaks");
     private static final Map<String, MethodPatch> PATCHES;
     private static final Map<String, List<MethodPatch>> TARGETS;
     private final PatchSettings settings;
@@ -23,7 +23,7 @@ public final class PatchTransformer implements IClassTransformer {
     static {
         Map<String, MethodPatch> patches = new LinkedHashMap<>();
         Map<String, List<MethodPatch>> targets = new LinkedHashMap<>();
-        List<MethodPatch> modules = new ArrayList<>(Arrays.asList(new BloodArsenalPatch(), new RootsPatch(), new LycanitesMeleePatch(), new LycanitesGhostPatch(), new MorechidsPatch()));
+        List<MethodPatch> modules = new ArrayList<>(Arrays.asList(new BloodArsenalPatch(), new RootsPatch(), new LycanitesMeleePatch(), new LycanitesGhostPatch(), new MorechidsPatch(), new WaystonesVillagePatch()));
         modules.addAll(Arrays.asList(GhostlyPatches.create()));
         for (MethodPatch patch : modules) {
             String key = patch.className + "#" + patch.methodName + patch.descriptor;

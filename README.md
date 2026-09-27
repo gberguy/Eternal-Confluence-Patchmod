@@ -1,6 +1,6 @@
-# Eternal Confluence Patchmod
+# Eternal Confluence Tweaks
 
-Designed for the Eternal Confluence modpack, this patchmod provides configurable fixes for Minecraft 1.12.2 and makes mobs from selected mods respect Corail Tombstone's Ghostly Shape effect. It can also be used in any other Minecraft 1.12.2 Forge installation with the relevant target mods.
+Designed for the Eternal Confluence modpack, this mod provides configurable fixes for Minecraft 1.12.2 and makes mobs from selected mods respect Corail Tombstone's Ghostly Shape effect. It can also be used in any other Minecraft 1.12.2 Forge installation with the relevant target mods.
 
 ## General fixes
 
@@ -22,14 +22,14 @@ Corail Tombstone and the mod being patched must be installed for the correspondi
 
 ## Configuration
 
-On first launch, the mod creates `config/eternalconfluencepatchmod.cfg`. Each setting can be set to `true` or `false` independently. Changes take effect after restarting Minecraft.
+On first launch, the mod creates `config/eternalconfluencetweaks.cfg`. Each fix can be set to `true` or `false` independently. Changes take effect after restarting Minecraft.
 
 ## Requirements
 
 - Minecraft 1.12.2
 - Forge for Minecraft 1.12.2
 
-The target mods are optional; the patchmod does not require every listed mod to be installed.
+The target mods are optional; the mod does not require every listed mod to be installed.
 
 ## Installation
 

@@ -36,7 +36,7 @@ def download(name):
     path = BUILD / "dependencies" / (name + ".jar")
     path.parent.mkdir(parents=True, exist_ok=True)
     if not path.exists() or hashlib.sha256(path.read_bytes()).hexdigest() != checksum:
-        request = urllib.request.Request(url, headers={"User-Agent": "EternalConfluencePatchmod-build/0.2.0"})
+        request = urllib.request.Request(url, headers={"User-Agent": "EternalConfluenceTweaks-build/0.3.0"})
         with urllib.request.urlopen(request, timeout=60) as response:
             data = response.read()
         if hashlib.sha256(data).hexdigest() != checksum:
@@ -57,6 +57,7 @@ def main():
     parser.add_argument("--original-mods", type=Path)
     parser.add_argument("--patched-mods", type=Path)
     parser.add_argument("--ghostly-mods", type=Path)
+    parser.add_argument("--waystones-jar", type=Path)
     args = parser.parse_args()
     if bool(args.original_mods) != bool(args.patched_mods):
         parser.error("Provide both --original-mods and --patched-mods for fixture tests")
@@ -134,7 +135,7 @@ def main():
                "-Dorg.apache.logging.log4j.simplelog.StatusLogger.level=OFF",
                "-Dorg.apache.logging.log4j.simplelog.level=OFF"]
     for name, path in (("originalMods", args.original_mods), ("patchedMods", args.patched_mods),
-                       ("ghostlyMods", args.ghostly_mods), ("minecraftMcp", minecraft_mcp), ("minecraftSrg", minecraft_srg),
+                       ("ghostlyMods", args.ghostly_mods), ("waystonesJar", args.waystones_jar), ("minecraftMcp", minecraft_mcp), ("minecraftSrg", minecraft_srg),
                        ("releaseJar", main_srg), ("releaseTestJar", test_srg), ("ghostlyMcp", ghostly_mcp if args.ghostly_mods else None)):
         if path:
             command.append("-Decpatches." + name + "=" + str(path.resolve()))

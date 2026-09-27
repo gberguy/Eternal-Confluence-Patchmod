@@ -24,6 +24,6 @@ jobs:
         run: python tools/build.py
       - uses: actions/upload-artifact@v4
         with:
-          name: Eternal-Confluence-Patchmod
+          name: Eternal-Confluence-Tweaks
           path: build/libs/*.jar
           if-no-files-found: error

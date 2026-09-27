@@ -18,17 +18,19 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 public final class PatchSettings {
-    private static final Logger LOG = LogManager.getLogger("EternalConfluencePatchmod");
+    private static final Logger LOG = LogManager.getLogger("EternalConfluenceTweaks");
     private static volatile PatchSettings current;
     private final EnumMap<PatchId, Boolean> enabled;
+    private final int villageWaystoneWeight;
 
-    private PatchSettings(EnumMap<PatchId, Boolean> enabled) {
+    private PatchSettings(EnumMap<PatchId, Boolean> enabled, int villageWaystoneWeight) {
         this.enabled = enabled;
+        this.villageWaystoneWeight = villageWaystoneWeight;
     }
 
     public static synchronized void initialize(File gameDirectory) {
         if (current == null) {
-            current = read(new File(gameDirectory, "config/eternalconfluencepatchmod.cfg"));
+            current = read(new File(gameDirectory, "config/eternalconfluencetweaks.cfg"));
         }
     }
 
@@ -43,6 +45,7 @@ public final class PatchSettings {
     public static PatchSettings read(File file) {
         EnumMap<PatchId, Boolean> values = new EnumMap<>(PatchId.class);
         Properties properties = new Properties();
+        int villageWaystoneWeight = 100;
         try {
             String original = file.exists() ? new String(Files.readAllBytes(file.toPath()), StandardCharsets.UTF_8) : "";
             properties.load(new StringReader(original));
@@ -56,6 +59,16 @@ public final class PatchSettings {
                     values.put(id, false);
                     LOG.warn("Invalid value for {} in {}; disabling this patch. Use true or false.", id.key, file);
                 }
+            }
+            try {
+                villageWaystoneWeight = Integer.parseInt(properties.getProperty("villageWaystoneWeight", "100").trim());
+                if (villageWaystoneWeight < 1 || villageWaystoneWeight > 1000000) {
+                    throw new NumberFormatException();
+                }
+            } catch (NumberFormatException invalid) {
+                villageWaystoneWeight = 100;
+                values.put(PatchId.WAYSTONES_VILLAGE, false);
+                LOG.warn("Invalid villageWaystoneWeight in {}; disabling the Waystones weight tweak. Use an integer from 1 to 1000000.", file);
             }
             String rendered = render(properties, original);
             if (!rendered.equals(original)) {
@@ -79,14 +92,14 @@ public final class PatchSettings {
                 values.put(id, false);
             }
         }
-        return new PatchSettings(values);
+        return new PatchSettings(values, villageWaystoneWeight);
     }
 
     private static String render(Properties properties, String original) throws IOException {
         String ghostHeader = "# Corail Tombstone - Ghostly Shape Compatibility";
         String ghostDescription = "# Makes mobs from enabled mods ignore players affected by Ghostly Shape, including players they already targeted.";
         Set<String> generated = new HashSet<>(Arrays.asList(
-                "# Eternal Confluence Patchmod", "# General Fixes", ghostHeader, ghostDescription,
+                "# Eternal Confluence Tweaks", "# General Fixes", ghostHeader, ghostDescription,
                 "# Set each fix to true or false. Changes require a full game/server restart.",
                 "# Target: Lycanites Mobs / Corail Tombstone",
                 "# Uses BlockSlate's existing subtype-aware item instead of a generic ItemBlock. Tested with 1.12.2-2.2.2-31.",
@@ -95,6 +108,7 @@ public final class PatchSettings {
                 "# Prevents targeting players with tombstone:ghostly_shape. Does nothing special when that potion is absent. Tested with Lycanites Mobs 1.12.2-2.0.8.10.",
                 "# Fixes invalid ASM descriptors when generating custom Orechid classes by using internal-name-aware type construction. Tested with 1.3.0."));
         Set<String> keys = new HashSet<>();
+        keys.add("villageWaystoneWeight");
         for (PatchId id : PatchId.values()) {
             keys.add(id.key);
             generated.add("# Target: " + id.modName);
@@ -114,15 +128,21 @@ public final class PatchSettings {
             logical.setLength(0);
         }
         if (logical.length() > 0) retained.append(logical);
-        StringBuilder output = new StringBuilder("# Eternal Confluence Patchmod\n\n# General Fixes\n");
+        StringBuilder output = new StringBuilder("# Eternal Confluence Tweaks\n\n# General Fixes\n");
         for (boolean ghostly : new boolean[]{false, true}) {
             if (ghostly) output.append('\n').append(ghostHeader).append('\n').append(ghostDescription).append('\n');
             for (PatchId id : PatchId.values()) {
                 if (id.ghostly() != ghostly) continue;
-                output.append("\n# Target: ").append(id.modName).append('\n');
+                if (id == PatchId.WAYSTONES_VILLAGE) output.append('\n');
+                else output.append("\n# Target: ").append(id.modName).append('\n');
                 if (!id.description.isEmpty()) output.append("# ").append(id.description).append('\n');
                 String value = properties.getProperty(id.key, "true").trim().replace("\\", "\\\\").replace("\n", "\\n").replace("\r", "\\r");
                 output.append(id.key).append('=').append(value).append('\n');
+                if (id == PatchId.WAYSTONES_VILLAGE) {
+                    String weight = properties.getProperty("villageWaystoneWeight", "100").trim()
+                            .replace("\\", "\\\\").replace("\n", "\\n").replace("\r", "\\r");
+                    output.append("villageWaystoneWeight=").append(weight).append('\n');
+                }
             }
         }
         String extra = retained.toString().trim();
@@ -132,5 +152,9 @@ public final class PatchSettings {
 
     public boolean enabled(PatchId id) {
         return Boolean.TRUE.equals(enabled.get(id));
+    }
+
+    public int villageWaystoneWeight() {
+        return villageWaystoneWeight;
     }
 }
