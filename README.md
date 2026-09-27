@@ -9,6 +9,7 @@ Designed for the Eternal Confluence modpack, this mod provides configurable fixe
 - **Lycanites Mobs** (`lycanitesMeleeLineOfSight`): Prevents Lycanites mobs from performing melee attacks through walls and other solid obstacles.
 - **MoreChids** (`morechidsClassGeneration`): Fixes a startup crash when MoreChids generates custom Orechid classes.
 - **Waystones** (`waystonesVillageWeight`, `villageWaystoneWeight`): Makes village Waystones more likely to generate by increasing their piece weight to `100` by default. The weight is configurable; Waystones' original village chance and maximum of one Waystone per village remain in effect.
+- **Witchery Villages + ToroQuest** (`witcheryVillagesToroGuards`): Replaces Witchery Villages guard spawns with ToroQuest guards affiliated with the local ToroQuest Province, so ToroQuest crime and reputation behavior applies. This only has an effect when both Witchery Villages and ToroQuest are installed.
 
 ## Corail Tombstone: Ghostly Shape compatibility
 

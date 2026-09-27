@@ -21,7 +21,10 @@ DEPENDENCIES = {
     "minecraft": ("https://piston-data.mojang.com/v1/objects/0f275bc1547d01fa5f56ba34bdc87d981ee12daf/client.jar", "8ada07da5ee77dad3527bd7278fbd05ee1fc8a597813b216a871a2d7d64cc64f"),
     "srg": ("https://maven.minecraftforge.net/de/oceanlabs/mcp/mcp/1.12.2/mcp-1.12.2-srg.zip", "bea27218818448851594889bf7d984df614ffc698bbe41599dd6237d627e3782"),
     "stable": ("https://maven.minecraftforge.net/de/oceanlabs/mcp/mcp_stable/39-1.12/mcp_stable-39-1.12.zip", "13a31f28c11f8f395ffe7e8563ade459f5a0ee46493abbbde3ce6e9493ac4152"),
+    "toroquest": ("https://curse.cleanroommc.com/curse/maven/toroquest-revamped-382059/4085781/toroquest-revamped-382059-4085781.jar", "46170074021b879db92ae31c1b77affa24e3bb8aa2a854df05b98c3aef5a847a"),
+    "witchery-villages": ("https://curse.cleanroommc.com/curse/maven/witchery-villages-1545448/8765330/witchery-villages-1545448-8765330.jar", "bb59f6a32726fdc8881d15be98654b23bdbedf4d9a70e3c01bffc9a151102eab"),
 }
+MOD_DEPENDENCIES = ("toroquest", "witchery-villages")
 MODERN_ASM = {
     "asm": "8cadd43ac5eb6d09de05faecca38b917a040bb9139c7edeb4cc81c740b713281",
     "asm-tree": "9929881f59eb6b840e86d54570c77b59ce721d104e6dfd7a40978991c2d3b41f",
@@ -36,7 +39,7 @@ def download(name):
     path = BUILD / "dependencies" / (name + ".jar")
     path.parent.mkdir(parents=True, exist_ok=True)
     if not path.exists() or hashlib.sha256(path.read_bytes()).hexdigest() != checksum:
-        request = urllib.request.Request(url, headers={"User-Agent": "EternalConfluenceTweaks-build/0.3.1"})
+        request = urllib.request.Request(url, headers={"User-Agent": "EternalConfluenceTweaks-build/0.4.0"})
         with urllib.request.urlopen(request, timeout=60) as response:
             data = response.read()
         if hashlib.sha256(data).hexdigest() != checksum:
@@ -93,7 +96,12 @@ def main():
     remap("mcp", dependencies["minecraft"], minecraft_mcp, [])
     remap("mcp", dependencies["forge"], forge_mcp, [dependencies["minecraft"]])
     remap("srg", minecraft_mcp, minecraft_srg, [])
-    compile_dependencies = [minecraft_mcp, forge_mcp] + [p for n, p in dependencies.items() if n not in ("minecraft", "forge", "srg", "stable")]
+    mod_mcp = []
+    for name in MOD_DEPENDENCIES:
+        target = BUILD / (name + "-mcp.jar")
+        remap("mcp", dependencies[name], target, [dependencies["minecraft"], dependencies["forge"]])
+        mod_mcp.append(target)
+    compile_dependencies = [minecraft_mcp, forge_mcp] + mod_mcp + [p for n, p in dependencies.items() if n not in ("minecraft", "forge", "srg", "stable", *MOD_DEPENDENCIES)]
     if args.ghostly_mods:
         ghostly_mcp = BUILD / "ghostly-mcp"
         ghostly_mcp.mkdir(exist_ok=True)
@@ -125,12 +133,12 @@ def main():
     main_mcp = BUILD / "main-mcp.jar"
     main_srg = BUILD / "main-srg.jar"
     archive(classes, main_mcp)
-    remap("srg", main_mcp, main_srg, [minecraft_mcp, forge_mcp])
+    remap("srg", main_mcp, main_srg, [minecraft_mcp, forge_mcp] + mod_mcp)
     test_mcp = BUILD / "test-mcp.jar"
     test_srg = BUILD / "test-srg.jar"
     archive(tests, test_mcp)
-    remap("srg", test_mcp, test_srg, [minecraft_mcp, forge_mcp])
-    test_dependencies = [classes, tests] + [path for name, path in dependencies.items() if name not in ("forge", "minecraft", "srg", "stable")]
+    remap("srg", test_mcp, test_srg, [minecraft_mcp, forge_mcp] + mod_mcp)
+    test_dependencies = [classes, tests] + [path for name, path in dependencies.items() if name not in ("forge", "minecraft", "srg", "stable", *MOD_DEPENDENCIES)]
     command = [java, "--add-opens", "java.base/java.lang=ALL-UNNAMED",
                "-Dorg.apache.logging.log4j.simplelog.StatusLogger.level=OFF",
                "-Dorg.apache.logging.log4j.simplelog.level=OFF"]

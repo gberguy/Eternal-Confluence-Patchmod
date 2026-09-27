@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.4.0] - 2026-09-27
+
+### Added
+- Added optional Witchery Villages guard replacement with ToroQuest guards affiliated with the local Province for ToroQuest crime and reputation behavior.
+
 ## [0.3.1] - 2026-09-27
 
 ### Changed
