@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.4.1] - 2026-09-27
+
+### Added
+- Added optional Witchery Villages wall routing around ToroQuest village structures.
+
+### Changed
+- Witchery Villages guard replacement now suppresses guard spawns in ToroQuest Provinces without a Lord.
+
 ## [0.4.0] - 2026-09-27
 
 ### Added

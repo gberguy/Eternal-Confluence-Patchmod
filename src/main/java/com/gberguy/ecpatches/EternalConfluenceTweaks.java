@@ -27,10 +27,11 @@ public class EternalConfluenceTweaks {
         MinecraftForge.EVENT_BUS.register(new GhostlyEvents(settings));
         if (settings.enabled(PatchId.WITCHERY_VILLAGES_TORO_GUARDS)
                 && Loader.isModLoaded("witcherywalls") && Loader.isModLoaded("toroquest")) {
-            MinecraftForge.EVENT_BUS.register(new WitcheryVillagesToroGuardEvents());
+            MinecraftForge.EVENT_BUS.register(new WitcheryVillagesToroGuardEvents(settings));
         }
         for (PatchId patch : PatchId.values()) {
             boolean targetPresent = patch == PatchId.WITCHERY_VILLAGES_TORO_GUARDS
+                    || patch == PatchId.WITCHERY_VILLAGES_TORO_WALLS
                     ? Loader.isModLoaded("witcherywalls") && Loader.isModLoaded("toroquest")
                     : Loader.isModLoaded(patch.modId);
             LOGGER.info("{}: {}, target {}", patch.key, settings.enabled(patch) ? "enabled" : "disabled",

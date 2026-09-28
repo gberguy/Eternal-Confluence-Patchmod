@@ -23,7 +23,7 @@ public final class PatchTransformer implements IClassTransformer {
     static {
         Map<String, MethodPatch> patches = new LinkedHashMap<>();
         Map<String, List<MethodPatch>> targets = new LinkedHashMap<>();
-        List<MethodPatch> modules = new ArrayList<>(Arrays.asList(new BloodArsenalPatch(), new RootsPatch(), new LycanitesMeleePatch(), new LycanitesGhostPatch(), new MorechidsPatch(), new WaystonesVillagePatch()));
+        List<MethodPatch> modules = new ArrayList<>(Arrays.asList(new BloodArsenalPatch(), new RootsPatch(), new LycanitesMeleePatch(), new LycanitesGhostPatch(), new MorechidsPatch(), new WaystonesVillagePatch(), new WitcheryVillagesToroWallsPatch()));
         modules.addAll(Arrays.asList(GhostlyPatches.create()));
         for (MethodPatch patch : modules) {
             String key = patch.className + "#" + patch.methodName + patch.descriptor;

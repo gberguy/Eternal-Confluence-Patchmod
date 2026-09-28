@@ -10,7 +10,8 @@ public enum PatchId {
     WIZARDRY_GHOST("ebWizardryGhostlyShape", "ebwizardry", "Electroblob's Wizardry", ""),
     ANCIENT_GHOST("ancientSpellcraftGhostlyShape", "ancientspellcraft", "Ancient Spellcraft", ""),
     TORO_GHOST("toroQuestGhostlyShape", "toroquest", "ToroQuest", ""),
-    WITCHERY_VILLAGES_TORO_GUARDS("witcheryVillagesToroGuards", "witcherywalls", "Witchery Villages + ToroQuest", "Replaces Witchery Villages guards with ToroQuest guards affiliated with the local ToroQuest Province.");
+    WITCHERY_VILLAGES_TORO_GUARDS("witcheryVillagesToroGuards", "witcherywalls", "Witchery Villages + ToroQuest", "Replaces Witchery Villages guards with ToroQuest guards in active Provinces and suppresses them in Provinces without a Lord."),
+    WITCHERY_VILLAGES_TORO_WALLS("witcheryVillagesToroWalls", "witcherywalls", "Witchery Villages + ToroQuest", "Expands Witchery Villages wall footprints around ToroQuest village structures when both mods are installed.");
 
     public final String key;
     public final String modId;

@@ -39,7 +39,7 @@ def download(name):
     path = BUILD / "dependencies" / (name + ".jar")
     path.parent.mkdir(parents=True, exist_ok=True)
     if not path.exists() or hashlib.sha256(path.read_bytes()).hexdigest() != checksum:
-        request = urllib.request.Request(url, headers={"User-Agent": "EternalConfluenceTweaks-build/0.4.0"})
+        request = urllib.request.Request(url, headers={"User-Agent": "EternalConfluenceTweaks-build/0.4.1"})
         with urllib.request.urlopen(request, timeout=60) as response:
             data = response.read()
         if hashlib.sha256(data).hexdigest() != checksum:
@@ -144,7 +144,8 @@ def main():
                "-Dorg.apache.logging.log4j.simplelog.level=OFF"]
     for name, path in (("originalMods", args.original_mods), ("patchedMods", args.patched_mods),
                        ("ghostlyMods", args.ghostly_mods), ("waystonesJar", args.waystones_jar), ("minecraftMcp", minecraft_mcp), ("minecraftSrg", minecraft_srg),
-                       ("releaseJar", main_srg), ("releaseTestJar", test_srg), ("ghostlyMcp", ghostly_mcp if args.ghostly_mods else None)):
+                       ("releaseJar", main_srg), ("releaseTestJar", test_srg), ("ghostlyMcp", ghostly_mcp if args.ghostly_mods else None),
+                       ("witcheryWallsJar", dependencies["witchery-villages"])):
         if path:
             command.append("-Decpatches." + name + "=" + str(path.resolve()))
     modern = []
